@@ -2,25 +2,89 @@ defmodule Mix2nixTest do
 	use ExUnit.Case
 	doctest Mix2nix
 
-	test "returns true when dependency is not optional" do
-		assert true == Mix2nix.is_required([hex: :cowlib, repo: "hexpm", optional: false])
-	end
+	test "return nix expression from a map of dependencies" do
+		input = %{
+  		decimal: {
+				:hex,
+				:decimal,
+				"1.8.1",
+				"a4ef3f5f3428bdbc0d35374029ffcf4ede8533536fa79896dd450168d9acdf3c",
+				[:mix],
+				[],
+				"hexpm"
+			},
+  		ecto: {
+				:hex,
+				:ecto,
+				"3.3.3",
+				"0830bf3aebcbf3d8c1a1811cd581773b6866886c012f52c0f027031fa96a0b53",
+				[:mix],
+				[
+					{:decimal, "~> 1.6 or ~> 2.0", [hex: :decimal, repo: "hexpm", optional: false]},
+					{:jason, "~> 1.0", [hex: :jason, repo: "hexpm", optional: true]},
+					{:fake, "~> 2.0", [hex: :fake, repo: "hexpm", optional: true]}
+				],
+				"hexpm"
+			},
+  		jason: {
+				:hex,
+				:jason,
+				"1.1.2",
+				"b03dedea67a99223a2eaf9f1264ce37154564de899fd3d8b9a21b1a6fd64afe7",
+				[:mix],
+				[
+					{:decimal, "~> 1.0", [hex: :decimal, repo: "hexpm", optional: true]}
+				],
+				"hexpm"
+			}
+		}
 
-	test "returns false when dependency is optional" do
-		assert false ==  Mix2nix.is_required([hex: :cowlib, repo: "hexpm", optional: true])
-	end
+		expected = """
+		           { pkgs }:
+		           with pkgs; with beamPackages;
 
-	test "returns a string representation of dependencies" do
-		deps = [
-			{:cowlib, "~> 2.7.3", [hex: :cowlib, repo: "hexpm", optional: false]},
-			{:ranch, "~> 1.7.1", [hex: :ranch, repo: "hexpm", optional: false]},
-			{:file_system, "~> 0.2.1 or ~> 0.3", [hex: :file_system, repo: "hexpm", optional: true]},
-		]
+		           rec {
+		           	decimal = buildMix rec {
+		           		name = "decimal";
+		           		version = "1.8.1";
 
-		assert "[ cowlib ranch ]" == Mix2nix.dep_string(deps)
-	end
+		           		src = fetchHex {
+		           			pkg = "${name}";
+		           			version = "${version}";
+		           			sha256 = "1v3srbdrvb9yj9lv6ljig9spq0k0g55wqjmxdiznib150aq59c9w";
+		           		};
 
-	test "return a string representation of an empty list" do
-		assert "[]" == Mix2nix.dep_string([])
+		           		beamDeps = [];
+		           	};
+
+		           	ecto = buildMix rec {
+		           		name = "ecto";
+		           		version = "3.3.3";
+
+		           		src = fetchHex {
+		           			pkg = "${name}";
+		           			version = "${version}";
+		           			sha256 = "0fiwp7cdy08yxhh63mnqqh7r10hfwkdapynyfrvqv4x2qbiniqqj";
+		           		};
+
+		           		beamDeps = [ decimal jason ];
+		           	};
+
+		           	jason = buildMix rec {
+		           		name = "jason";
+		           		version = "1.1.2";
+
+		           		src = fetchHex {
+		           			pkg = "${name}";
+		           			version = "${version}";
+		           			sha256 = "1zispkj3s923izkwkj2xvaxicd7m0vi2xnhnvvhkl82qm2y47y7x";
+		           		};
+
+		           		beamDeps = [ decimal ];
+		           	};
+
+		           }
+		           """
+		assert expected == Mix2nix.expression_set(input)
 	end
 end

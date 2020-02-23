@@ -1,9 +1,13 @@
 defmodule Mix2nix do
 	def process(filename) do
-		filename
-		|> read
-		|> Enum.map(fn {_, v} -> nix_expression(v) end)
-		|> Enum.join("\n\n")
+		deps = read(filename)
+		expression_set(deps)
+	end
+
+	def expression_set(deps) do
+		deps
+		|> Enum.map(fn {_, v} -> nix_expression(deps, v) end)
+		|> Enum.join("\n")
 		|> wrap
 	end
 
@@ -19,14 +23,14 @@ defmodule Mix2nix do
 		end
 	end
 
-	def is_required([ _, _, optional: optional ]) do
-		! optional
+	def is_required(allpkgs, [ hex: name, repo: _, optional: optional ]) do
+		Map.has_key?(allpkgs, name) or ! optional
 	end
 
-	def dep_string(deps) do
+	def dep_string(allpkgs, deps) do
 		depString =
 			deps
-			|> Enum.filter(fn x -> is_required(elem(x, 2)) end)
+			|> Enum.filter(fn x -> is_required(allpkgs, elem(x, 2)) end)
 			|> Enum.map(fn x -> Atom.to_string(elem(x, 0)) end)
 			|> Enum.join(" ")
 
@@ -54,13 +58,13 @@ defmodule Mix2nix do
 		end
 	end
 
-	def nix_expression(pkg) do
+	def nix_expression(allpkgs, pkg) do
 		with [buildEnv] <- elem(pkg, 4),
 		     builder <- get_builder(buildEnv),
 		     name <- Atom.to_string(elem(pkg, 1)),
 		     version <- elem(pkg, 2),
 		     sha256 <- get_hash(name, version),
-		     deps <- dep_string(elem(pkg, 5)) do
+		     deps <- dep_string(allpkgs, elem(pkg, 5)) do
 			"""
 				#{name} = #{builder} rec {
 					name = "#{name}";
