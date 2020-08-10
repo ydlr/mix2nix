@@ -41,10 +41,18 @@ defmodule Mix2nix do
 		end
 	end
 
-	def get_builder(env) do
-		case env do
-			:rebar3 -> "buildRebar3"
-			:mix -> "buildMix"
+	def get_build_env(builders, pkgname) do
+		cond do
+			pkgname == "cowboy" ->
+				"buildErlangMk"
+			Enum.member?(builders, :mix) ->
+				"buildMix"
+			Enum.member?(builders, :rebar3) ->
+				"buildRebar3"
+			Enum.member?(builders, :make) ->
+				"buildErlangMk"
+			true ->
+				"buildMix"
 		end
 	end
 
@@ -59,14 +67,14 @@ defmodule Mix2nix do
 	end
 
 	def nix_expression(allpkgs, pkg) do
-		with [buildEnv] <- elem(pkg, 4),
-		     builder <- get_builder(buildEnv),
-		     name <- Atom.to_string(elem(pkg, 1)),
+		with name <- Atom.to_string(elem(pkg, 1)),
+		     builders <- elem(pkg, 4),
+		     buildEnv <- get_build_env(builders, name),
 		     version <- elem(pkg, 2),
 		     sha256 <- get_hash(name, version),
 		     deps <- dep_string(allpkgs, elem(pkg, 5)) do
 			"""
-				#{name} = #{builder} rec {
+				#{name} = #{buildEnv} rec {
 					name = "#{name}";
 					version = "#{version}";
 
