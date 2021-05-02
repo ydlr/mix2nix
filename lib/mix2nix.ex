@@ -1,7 +1,8 @@
 defmodule Mix2nix do
 	def process(filename) do
-		deps = read(filename)
-		expression_set(deps)
+		filename
+		|> read
+		|> expression_set
 	end
 
 	def expression_set(deps) do
@@ -19,7 +20,11 @@ defmodule Mix2nix do
 		     {%{} = lock, _} <- Code.eval_quoted(quoted, opts) do
 			lock
 		else
-			_ -> %{}
+			{:error, posix} when is_atom(posix) ->
+				raise to_string(:file.format_error(posix))
+
+			{:error, {line, error, token}} when is_integer(line) ->
+				raise "Error on line #{line}: #{error} (#{inspect(token)})"
 		end
 	end
 
