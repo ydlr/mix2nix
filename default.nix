@@ -4,7 +4,7 @@ with pkgs;
 
 stdenv.mkDerivation {
 	pname = "mix2nix";
-	version = "0.1.0";
+	version = "0.1.2";
 
 	src = ./.;
 
