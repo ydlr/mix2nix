@@ -37,6 +37,7 @@ $ nix-env -f ./ -i
 ## Roadmap
 
 * Support git sources
+* Support local sources
 * Support private Hex.pm packages
 * Support alternative Hex repositories
 
@@ -45,3 +46,6 @@ This is very much a work-in-progress. It works nicely within my narrow use-case
 (phoenix app with few dependencies). Right now, it only supports public packages
 from the Hex.pm repository. The expression for some package may not work as is.
 If you find a package that results in an invalid expresion, please let me know.
+
+Currently, any git or local dependencies will simply be skipped without a
+warning.

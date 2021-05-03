@@ -8,6 +8,7 @@ defmodule Mix2nix do
 	def expression_set(deps) do
 		deps
 		|> Enum.map(fn {_, v} -> nix_expression(deps, v) end)
+		|> Enum.reject(fn x -> x == "" end)
 		|> Enum.join("\n")
 		|> wrap
 	end
@@ -71,28 +72,40 @@ defmodule Mix2nix do
 		end
 	end
 
-	def nix_expression(allpkgs, pkg) do
-		with name <- Atom.to_string(elem(pkg, 1)),
-		     builders <- elem(pkg, 4),
-		     buildEnv <- get_build_env(builders, name),
-		     version <- elem(pkg, 2),
-		     sha256 <- get_hash(name, version),
-		     deps <- dep_string(allpkgs, elem(pkg, 5)) do
-			"""
-				#{name} = #{buildEnv} rec {
-					name = "#{name}";
-					version = "#{version}";
+	def nix_expression(
+		allpkgs,
+		{:hex, name, version, _hash, builders, deps, "hexpm", _hash2}
+	), do: get_hexpm_expression(allpkgs, name, version, builders, deps)
 
-					src = fetchHex {
-						pkg = "${name}";
-						version = "${version}";
-						sha256 = "#{sha256}";
-					};
+	def nix_expression(
+		allpkgs,
+		{:hex, name, version, _hash, builders, deps, "hexpm"}
+	), do: get_hexpm_expression(allpkgs, name, version, builders, deps)
 
-					beamDeps = #{deps};
+	def nix_expression(_allpkgs, _pkg) do
+		""
+	end
+
+	defp get_hexpm_expression(allpkgs, name, version, builders, deps) do
+		name = Atom.to_string(name)
+		buildEnv = get_build_env(builders, name)
+		sha256 = get_hash(name, version)
+		deps = dep_string(allpkgs, deps)
+
+		"""
+			#{name} = #{buildEnv} rec {
+				name = "#{name}";
+				version = "#{version}";
+
+				src = fetchHex {
+					pkg = "${name}";
+					version = "${version}";
+					sha256 = "#{sha256}";
 				};
-			"""
-		end
+
+				beamDeps = #{deps};
+			};
+		"""
 	end
 
 	defp wrap(pkgs) do

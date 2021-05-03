@@ -26,7 +26,7 @@ defmodule Mix2nixTest do
 				],
 				"hexpm"
 			},
-  		jason: {
+  		"jason": {
 				:hex,
 				:jason,
 				"1.1.2",
@@ -35,7 +35,14 @@ defmodule Mix2nixTest do
 				[
 					{:decimal, "~> 1.0", [hex: :decimal, repo: "hexpm", optional: true]}
 				],
-				"hexpm"
+				"hexpm",
+				"b03dedea67a99223a2eaf9f1264ce37154564de899fd3d8b9a21b1a6fd64gfe7"
+			},
+			"scrivener_html": {
+				:git,
+				"https://github.com/jerodsanto/scrivener_html.git",
+				"3e233754e559e6c3c665b373ea1c0d853a66d37a",
+				[ref: "3e233754e559e6c3c665b373ea1c0d853a66d37a"]
 			}
 		}
 
