@@ -2,7 +2,7 @@
 Generate a set of nix derivations from a mix.lock file.
 
 ## Usage
-By default, mix2nix looks expects a mix.lock file in the current working
+By default, mix2nix looks for a mix.lock file in the current working
 directory and outputs to STDOUT. You can optionally specify a path to the
 lockfile and a destination for the output:
 ```
