@@ -40,12 +40,23 @@ $ nix-env -f ./ -i
 * Support local sources
 * Support private Hex.pm packages
 * Support alternative Hex repositories
+* Allow specifying which version of Erlang/OTP to build pacakges against.
+
+## Not on the Roadmap
+
+The scope of this project is extremely limited: To consume a mix.lock file and
+return a set of expressions for building and installing the listed packages with
+the Nix package manager.
+
+This is NOT intended to be an all-powerful single command to package your Elixir
+application for Nix.
 
 ## Known issues and limitations
 This is very much a work-in-progress. It works nicely within my narrow use-case
 (phoenix app with few dependencies). Right now, it only supports public packages
 from the Hex.pm repository. The expression for some package may not work as is.
-If you find a package that results in an invalid expresion, please let me know.
+If you find a package that does not build or execute from the generated
+expression, please let me know.
 
 Currently, any git or local dependencies will simply be skipped without a
 warning.
