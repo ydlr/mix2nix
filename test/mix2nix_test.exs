@@ -47,50 +47,56 @@ defmodule Mix2nixTest do
 		}
 
 		expected = """
-		           { pkgs }:
-		           with pkgs; with beamPackages;
+		           { lib, beamPackages, overrides ? {} }:
 
-		           rec {
-		           	decimal = buildMix rec {
-		           		name = "decimal";
-		           		version = "1.8.1";
+		           let
+		           	buildRebar3 = lib.makeOverridable beamPackages.buildRebar3;
+		           	buildMix = lib.makeOverridable beamPackages.buildMix;
+		           	buildErlangMk = lib.makeOverridable beamPackages.buildErlangMk;
 
-		           		src = fetchHex {
-		           			pkg = "${name}";
-		           			version = "${version}";
-		           			sha256 = "1v3srbdrvb9yj9lv6ljig9spq0k0g55wqjmxdiznib150aq59c9w";
+		           	self = packages // overrides;
+
+		           	packages = with beamPackages; with self; {
+		           		decimal = buildMix rec {
+		           			name = "decimal";
+		           			version = "1.8.1";
+
+		           			src = fetchHex {
+		           				pkg = "${name}";
+		           				version = "${version}";
+		           				sha256 = "1v3srbdrvb9yj9lv6ljig9spq0k0g55wqjmxdiznib150aq59c9w";
+		           			};
+
+		           			beamDeps = [];
 		           		};
 
-		           		beamDeps = [];
-		           	};
+		           		ecto = buildMix rec {
+		           			name = "ecto";
+		           			version = "3.3.3";
 
-		           	ecto = buildMix rec {
-		           		name = "ecto";
-		           		version = "3.3.3";
+		           			src = fetchHex {
+		           				pkg = "${name}";
+		           				version = "${version}";
+		           				sha256 = "0fiwp7cdy08yxhh63mnqqh7r10hfwkdapynyfrvqv4x2qbiniqqj";
+		           			};
 
-		           		src = fetchHex {
-		           			pkg = "${name}";
-		           			version = "${version}";
-		           			sha256 = "0fiwp7cdy08yxhh63mnqqh7r10hfwkdapynyfrvqv4x2qbiniqqj";
+		           			beamDeps = [ decimal jason ];
 		           		};
 
-		           		beamDeps = [ decimal jason ];
-		           	};
+		           		jason = buildMix rec {
+		           			name = "jason";
+		           			version = "1.1.2";
 
-		           	jason = buildMix rec {
-		           		name = "jason";
-		           		version = "1.1.2";
+		           			src = fetchHex {
+		           				pkg = "${name}";
+		           				version = "${version}";
+		           				sha256 = "1zispkj3s923izkwkj2xvaxicd7m0vi2xnhnvvhkl82qm2y47y7x";
+		           			};
 
-		           		src = fetchHex {
-		           			pkg = "${name}";
-		           			version = "${version}";
-		           			sha256 = "1zispkj3s923izkwkj2xvaxicd7m0vi2xnhnvvhkl82qm2y47y7x";
+		           			beamDeps = [ decimal ];
 		           		};
-
-		           		beamDeps = [ decimal ];
 		           	};
-
-		           }
+		           in packages
 		           """
 		assert expected == Mix2nix.expression_set(input)
 	end
