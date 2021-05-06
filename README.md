@@ -74,6 +74,7 @@ definitions will not be aware of these. This is because neither mix.lock nor
 reback.lock are plugin-aware.
 
 In order to declare those plugins, you will need to:
+
 1. Add these plugins as dependencies in your mix.exs file.
 2. Run mix2nix to generate your package set.
 3. Override the packages that need to be made aware of their plugins.
