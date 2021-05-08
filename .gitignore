@@ -25,3 +25,5 @@ mix2nix-*.tar
 # Remove nix result
 /result
 
+# Remove temporary files
+*~
