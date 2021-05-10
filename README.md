@@ -71,7 +71,7 @@ in
 
 If you require any rebar packages that use plugins, mix2nix generated package
 definitions will not be aware of these. This is because neither mix.lock nor
-reback.lock are plugin-aware.
+rebar.lock are plugin-aware.
 
 In order to declare those plugins, you will need to:
 
