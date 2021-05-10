@@ -57,8 +57,8 @@ You can override any package by passing in an `overrides` attribute:
 let
   deps = import ./deps.nix { inherit lib beamPackages; overrides = overrideDeps; };
 
-  overrideDeps = {
-    package1 = deps.package1.override {
+  overrideDeps = (self: super: {
+    package1 = super.package1.override {
       enableDebugInfo = true;
       compilePorts = true;
     };
@@ -82,9 +82,9 @@ In order to declare those plugins, you will need to:
 For example, telemetry requires covertool plugin. An override would look
 like:
 ```
-overrides = {
-  telemetry = deps.telemetry.override {
-    buildPlugins = [ covertool ];
+overrides = (self: super: {
+  telemetry = super.telemetry.override {
+    buildPlugins = [ super.covertool ];
   };
 }
 ```
