@@ -96,7 +96,7 @@ defmodule Mix2nixTest do
 		           			beamDeps = [ decimal ];
 		           		};
 		           	};
-		           in packages
+		           in self
 		           """
 		assert expected == Mix2nix.expression_set(input)
 	end

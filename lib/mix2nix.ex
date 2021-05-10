@@ -123,7 +123,7 @@ defmodule Mix2nix do
 			packages = with beamPackages; with self; {
 		#{pkgs}
 			};
-		in packages
+		in self
 		"""
 	end
 end
