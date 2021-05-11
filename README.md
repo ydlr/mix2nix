@@ -42,6 +42,7 @@ in
 buildMix rec {
   name = "example-package";
   src = ./.;
+  version = "0.0.0";
 
   beamDeps = [
     deps.package1
