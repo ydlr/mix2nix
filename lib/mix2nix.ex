@@ -111,7 +111,7 @@ defmodule Mix2nix do
 
 	defp wrap(pkgs) do
 		"""
-		{ lib, beamPackages, overrides ? {} }:
+		{ lib, beamPackages, overrides ? (x: y: {}) }:
 
 		let
 			buildRebar3 = lib.makeOverridable beamPackages.buildRebar3;
