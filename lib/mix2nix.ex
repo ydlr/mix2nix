@@ -52,6 +52,8 @@ defmodule Mix2nix do
 		cond do
 			pkgname == "cowboy" ->
 				"buildErlangMk"
+			pkgname == "ssl_verify_fun" ->
+				"buildRebar3"
 			Enum.member?(builders, :mix) ->
 				"buildMix"
 			Enum.member?(builders, :rebar3) ->
