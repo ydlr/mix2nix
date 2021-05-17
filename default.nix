@@ -8,7 +8,8 @@ stdenv.mkDerivation {
 
 	src = ./.;
 
-	buildInputs = [ elixir erlang ];
+	nativeBuildInputs = [ elixir ];
+
 	buildPhase = "mix escript.build";
 
 	installPhase = "install -Dt $out/bin mix2nix";
