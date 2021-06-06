@@ -7,6 +7,8 @@ defmodule Mix2nix do
 
 	def expression_set(deps) do
 		deps
+		|> Map.to_list()
+		|> Enum.sort(:asc)
 		|> Enum.map(fn {_, v} -> nix_expression(deps, v) end)
 		|> Enum.reject(fn x -> x == "" end)
 		|> Enum.join("\n")
