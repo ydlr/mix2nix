@@ -43,6 +43,19 @@ defmodule Mix2nixTest do
 				"https://github.com/jerodsanto/scrivener_html.git",
 				"3e233754e559e6c3c665b373ea1c0d853a66d37a",
 				[ref: "3e233754e559e6c3c665b373ea1c0d853a66d37a"]
+			},
+			"cowboy": {
+				:hex,
+				:cowboy,
+				"2.8.0",
+				"f3dc62e35797ecd9ac1b50db74611193c29815401e53bac9a5c0577bd7bc667d",
+				[:rebar3],
+				[
+					{:cowlib, "~> 2.9.1", [hex: :cowlib, repo: "hexpm", optional: false]},
+					{:ranch, "~> 1.7.1", [hex: :ranch, repo: "hexpm", optional: false]}
+				],
+				"hexpm",
+				"4643e4fba74ac96d4d152c75803de6fad0b3fa5df354c71afdd6cbeeb15fac8a"
 			}
 		}
 
@@ -57,6 +70,19 @@ defmodule Mix2nixTest do
 		           	self = packages // (overrides self packages);
 
 		           	packages = with beamPackages; with self; {
+		           		cowboy = buildErlangMk rec {
+		           			name = "cowboy";
+		           			version = "2.8.0";
+
+		           			src = fetchHex {
+		           				pkg = "${name}";
+		           				version = "${version}";
+		           				sha256 = "12mcbyqyxjynzldcfm7kbpxb7l7swqyq0x9c2m6nvjaalzxy8hs6";
+		           			};
+
+		           			beamDeps = [ cowlib ranch ];
+		           		};
+
 		           		decimal = buildMix rec {
 		           			name = "decimal";
 		           			version = "1.8.1";

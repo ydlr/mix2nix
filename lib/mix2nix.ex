@@ -48,18 +48,27 @@ defmodule Mix2nix do
 		end
 	end
 
+	def specific_workaround(pkg) do
+		case pkg do
+			"cowboy" -> "buildErlangMk"
+			"ssl_verify_fun" -> "buildRebar3"
+			"jose" -> "buildMix"
+			_ -> false
+		end
+	end
+
 	def get_build_env(builders, pkgname) do
 		cond do
-			pkgname == "cowboy" ->
-				"buildErlangMk"
-			Enum.member?(builders, :rebar3) ->
-				"buildRebar3"
+			specific_workaround(pkgname) ->
+				specific_workaround(pkgname)
 			Enum.member?(builders, :mix) ->
 				"buildMix"
+			Enum.member?(builders, :rebar3) ->
+				"buildRebar3"
 			Enum.member?(builders, :make) ->
 				"buildErlangMk"
 			true ->
-				"buildRebar3"
+				"buildMix"
 		end
 	end
 
