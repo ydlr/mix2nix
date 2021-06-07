@@ -4,10 +4,11 @@ with pkgs;
 
 stdenv.mkDerivation {
 	pname = "mix2nix";
-	version = "0.1.3";
+	version = "0.1.4";
 
 	src = ./.;
 
+	buildInputs = [ erlang ];
 	nativeBuildInputs = [ elixir ];
 
 	buildPhase = "mix escript.build";
