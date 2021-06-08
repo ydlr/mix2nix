@@ -65,7 +65,7 @@ defmodule Mix2nix do
 				specific_workaround(pkgname)
 			Enum.member?(builders, :mix) ->
 				"buildMix"
-			Enum.member?(builders, :rebar3) ->
+			Enum.member?(builders, :rebar3) or Enum.member?(builders, :rebar) ->
 				"buildRebar3"
 			Enum.member?(builders, :make) ->
 				"buildErlangMk"
