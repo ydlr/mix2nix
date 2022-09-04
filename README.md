@@ -3,15 +3,13 @@ Generate a set of nix derivations from a mix.lock file.
 
 ## Overview
 
-The purpose of mix2nix is simply to create a set of nix package definitions
-based on the contents of a mix.lock file. It is not an attempt at an
-all-encompassing solution to distributing Elixir applications with Nix. As such,
-the scope will always be limited to generating nix configurations based on
-information available in mix.lock.
+Mix2nix is a commandline utility to create a set of nix package definitions
+based on the contents of a mix.lock file. It makes it a little easier to manage
+Elixir dependencies with nix.
 
-The dream is for a dead-simple, completely accurate method of packaging
-Elixir (and other BEAM) packages for Nix without sacrificing reproducability.
-Mix2nix, though, is only meant to tackle one small piece of the puzzle.
+To understand where it fits in with other tools used to package Elixir libraries
+and releases for Nix, please read the [https://nixos.org/manual/nixpkgs/stable/#packaging-beam-applications](Packaging BEAM Applications) section
+of the Nixpkgs Manual.
 
 ## Usage
 
@@ -30,7 +28,7 @@ $ mix2nix /path/to/mix.lock > deps.nix
 ### Using generated expressions in your project
 
 You can import your generated package set into your own package definition like
-any other function. As example default.nix could look something like:
+any other function. An example default.nix could look something like:
 ```
 { pkgs ? import <nixpkgs> {} }:
 
@@ -51,6 +49,21 @@ buildMix rec {
 }
 ```
 
+If you are packaging your application as a release:
+```
+{ pkgs ? import <nixpkgs> {} }:
+
+with pkgs; with beamPackages;
+
+mixRelease {
+  pname = "example-release";
+  src = ./.;
+  version = "0.0.0";
+
+  mixNixDeps = import ./deps.nix { inherit lib beamPackage; };
+}
+```
+
 ### Overriding package definitions
 
 You can override any package by passing in an `overrides` attribute:
@@ -66,28 +79,6 @@ let
   };
 in
 ...
-```
-
-### Rebar3 Plugins
-
-If you require any rebar packages that use plugins, mix2nix generated package
-definitions will not be aware of these. This is because neither mix.lock nor
-rebar.lock are plugin-aware.
-
-In order to declare those plugins, you will need to:
-
-1. Add these plugins as dependencies in your mix.exs file.
-2. Run mix2nix to generate your package set.
-3. Override the packages that need to be made aware of their plugins.
-
-For example, telemetry requires covertool plugin. An override would look
-like:
-```
-overrides = (self: super: {
-  telemetry = super.telemetry.override {
-    buildPlugins = [ super.covertool ];
-  };
-}
 ```
 
 ### Dependencies from outside of Hex.pm Repository
