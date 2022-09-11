@@ -25,10 +25,12 @@ defmodule Mix2nix do
 			lock
 		else
 			{:error, posix} when is_atom(posix) ->
-				raise to_string(:file.format_error(posix))
+				:file.format_error(posix) |> to_string() |> IO.puts()
+				System.halt(1)
 
 			{:error, {line, error, token}} when is_integer(line) ->
-				raise "Error on line #{line}: #{error} (#{inspect(token)})"
+				IO.puts("Error on line #{line}: #{error} (" <> inspect(token) <> ")")
+				System.halt(1)
 		end
 	end
 
@@ -79,8 +81,11 @@ defmodule Mix2nix do
 		{ result, status } = System.cmd("nix-prefetch-url", [url])
 
 		case status do
-			0 -> String.trim(result)
-			_ -> raise "Use of nix-prefetch-url failed."
+			0 ->
+				String.trim(result)
+			_ ->
+				IO.puts("Use of nix-prefetch-url failed.")
+				System.halt(1)
 		end
 	end
 
