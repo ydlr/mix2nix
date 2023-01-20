@@ -8,7 +8,7 @@ based on the contents of a mix.lock file. It makes it a little easier to manage
 Elixir dependencies with nix.
 
 To understand where it fits in with other tools used to package Elixir libraries
-and releases for Nix, please read the [https://nixos.org/manual/nixpkgs/stable/#packaging-beam-applications](Packaging BEAM Applications) section
+and releases for Nix, please read the [Packaging BEAM Applications](https://nixos.org/manual/nixpkgs/stable/#packaging-beam-applications) section
 of the Nixpkgs Manual.
 
 ## Usage
