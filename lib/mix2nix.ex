@@ -91,8 +91,8 @@ defmodule Mix2nix do
 
 	def nix_expression(
 		allpkgs,
-		{:hex, name, version, _hash, builders, deps, "hexpm", _hash2}
-	), do: get_hexpm_expression(allpkgs, name, version, builders, deps)
+		{:hex, name, version, _hash, builders, deps, "hexpm", hash2}
+	), do: get_hexpm_expression(allpkgs, name, version, builders, deps, hash2)
 
 	def nix_expression(
 		allpkgs,
@@ -103,10 +103,10 @@ defmodule Mix2nix do
 		""
 	end
 
-	defp get_hexpm_expression(allpkgs, name, version, builders, deps) do
+	defp get_hexpm_expression(allpkgs, name, version, builders, deps, sha256 \\ nil) do
 		name = Atom.to_string(name)
 		buildEnv = get_build_env(builders, name)
-		sha256 = get_hash(name, version)
+		sha256 = sha256 || get_hash(name, version)
 		deps = dep_string(allpkgs, deps)
 
 		"""
