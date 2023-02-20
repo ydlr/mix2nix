@@ -9,7 +9,7 @@ defmodule Mix2nix do
 		deps
 		|> Map.to_list()
 		|> Enum.sort(:asc)
-		|> Enum.map(fn {_, v} -> nix_expression(deps, v) end)
+		|> Enum.map(fn {name_str, v} -> nix_expression(deps, name_str, v) end)
 		|> Enum.reject(fn x -> x == "" end)
 		|> Enum.join("\n")
 		|> String.trim("\n")
@@ -90,14 +90,32 @@ defmodule Mix2nix do
 	end
 
 	def nix_expression(
-		allpkgs,
+		allpkgs, _name_str,
 		{:hex, name, version, _hash, builders, deps, "hexpm", hash2}
 	), do: get_hexpm_expression(allpkgs, name, version, builders, deps, hash2)
 
 	def nix_expression(
-		allpkgs,
+		allpkgs, _name_str,
 		{:hex, name, version, _hash, builders, deps, "hexpm"}
 	), do: get_hexpm_expression(allpkgs, name, version, builders, deps)
+
+    def nix_expression(_allpkgs, name_str, {:git, url, rev, []}) do
+		"""
+		    #{name_str} = buildMix rec {
+		      name = "#{name_str}";
+
+		      src = fetchGitMixDep {
+		        name = "${name}";
+		        url = "#{url}";
+		        rev = "#{rev}";
+		      };
+		      version = builtins.readFile src.version;
+		      # Interection of all of the packages mix2nix found and those
+		      # declared in the package:
+		      beamDeps = with builtins; map (a: getAttr a packages) (filter (a: hasAttr a packages) (lib.splitString " " (readFile src.deps)));
+		    };
+		"""
+    end
 
 	def nix_expression(_allpkgs, _pkg) do
 		""
@@ -127,12 +145,35 @@ defmodule Mix2nix do
 
 	defp wrap(pkgs) do
 		"""
-		{ lib, beamPackages, overrides ? (x: y: {}) }:
+		{ stdenv, lib, beamPackages, overrides ? (x: y: {}) }:
 
 		let
 		  buildRebar3 = lib.makeOverridable beamPackages.buildRebar3;
 		  buildMix = lib.makeOverridable beamPackages.buildMix;
 		  buildErlangMk = lib.makeOverridable beamPackages.buildErlangMk;
+
+		  fetchGitMixDep = attrs@{ name, url, rev }: stdenv.mkDerivation {
+		    inherit name;
+		    src = builtins.fetchGit attrs;
+		    nativeBuildInputs = [ beamPackages.elixir ];
+		    outputs = [ "out" "version" "deps" ];
+		    # Create a fake .git folder that will be acceptable to Mix's SCM lock check:
+		    # https://github.com/elixir-lang/elixir/blob/74bfab8ee271e53d24cb0012b5db1e2a931e0470/lib/mix/lib/mix/scm/git.ex#L242
+		    buildPhase = ''
+		        mkdir -p .git/objects .git/refs
+		        echo ${rev} > .git/HEAD
+		        echo '[remote "origin"]' > .git/config
+		        echo "    url = ${url}" >> .git/config
+		    '';
+		    installPhase = ''
+		        # The main package
+		        cp -r . $out
+		        # Metadata: version
+		        echo "File.write!(\\"$version\\", Mix.Project.config()[:version])" | iex -S mix cmd true
+		        # Metadata: deps as a newline separated string
+		        echo "File.write!(\\"$deps\\", Mix.Project.config()[:deps] |> Enum.map(& &1 |> elem(0) |> Atom.to_string()) |> Enum.join(\\" \\"))" | iex -S mix cmd true
+		    '';
+		  };
 
 		  self = packages // (overrides self packages);
 
