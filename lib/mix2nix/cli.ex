@@ -8,8 +8,16 @@ defmodule Mix2nix.CLI do
 
     {opt, args, _invalid} =
       OptionParser.parse(argv,
-        switches: [version: :boolean, help: :boolean]
+        switches: [
+          hex_get_pkg: :string,
+          hex_pkg_vsn: :string,
+          hex_api_key: :string,
+          version: :boolean,
+          help: :boolean
+        ]
       )
+
+    hex_get_pkg = opt[:hex_get_pkg]
 
     cond do
       opt[:version] ->
@@ -19,6 +27,15 @@ defmodule Mix2nix.CLI do
       opt[:help] ->
         print_usage() |> IO.puts()
 
+      hex_get_pkg ->
+        :ok = start_apps
+
+        Mix2nix.hex_get_pkg(
+          pkg: hex_get_pkg,
+          vsn: opt[:hex_pkg_vsn],
+          key: opt[:hex_api_key]
+        )
+
       true ->
         case lock_file_from_args(args) do
           {:error, e} ->
@@ -26,11 +43,18 @@ defmodule Mix2nix.CLI do
             System.halt(1)
 
           {:ok, lock} ->
+            :ok = start_apps
+
             lock
             |> Mix2nix.process()
             |> IO.puts()
         end
     end
+  end
+
+  def start_apps do
+    [:crypto, :asn1, :public_key, :ssl, :inets]
+    |> Enum.each(&(:ok = Application.start(&1)))
   end
 
   defp lock_file_from_args([lock]) do

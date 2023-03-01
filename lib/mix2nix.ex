@@ -1,4 +1,32 @@
 defmodule Mix2nix do
+  def hex_get_pkg(pkg: pkg, vsn: vsn, key: key) do
+    :hex_core.default_config()
+    |> Map.update!(
+      :api_key,
+      &((key && String.to_charlist(key)) || &1)
+    )
+    |> Map.update!(:http_adapter, fn _ ->
+      {:hex_http_httpc,
+       %{
+         http_options: [
+           ssl: [
+             cacerts: :public_key.cacerts_get(),
+             verify: :verify_peer
+           ]
+         ]
+       }}
+    end)
+    |> :hex_repo.get_tarball(pkg, vsn)
+    |> case do
+      {:ok, {200, %{}, tar}} ->
+        tar
+
+      failure ->
+        IO.puts("Tarball fetch failure " <> inspect(failure))
+        System.halt(1)
+    end
+  end
+
   def process(filename) do
     filename
     |> read
@@ -81,7 +109,7 @@ defmodule Mix2nix do
   end
 
   def get_hash(name, version) do
-    {200, %{}, tar} = :hex_client.get_repo_tarball(name, version)
+    tar = hex_get_pkg(pkg: name, vsn: version, key: nil)
     Temp.track!()
     {:ok, _, tmp} = Temp.open()
     :ok = File.write!(tmp, tar)
