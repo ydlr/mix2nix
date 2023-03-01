@@ -28,13 +28,17 @@ defmodule Mix2nix.CLI do
         print_usage() |> IO.puts()
 
       hex_get_pkg ->
+        hex_pkg_vsn = opt[:hex_pkg_vsn]
         :ok = start_apps
 
-        Mix2nix.hex_get_pkg(
-          pkg: hex_get_pkg,
-          vsn: opt[:hex_pkg_vsn],
-          key: opt[:hex_api_key]
-        )
+        tar =
+          Mix2nix.hex_get_pkg(
+            pkg: hex_get_pkg,
+            vsn: opt[:hex_pkg_vsn],
+            key: opt[:hex_api_key]
+          )
+
+        :ok = File.write!("#{hex_get_pkg}-#{hex_pkg_vsn}.tar", tar)
 
       true ->
         case lock_file_from_args(args) do

@@ -17,7 +17,9 @@ in
     version = "0.1.6";
     src = ./.;
     inherit mixNixDeps;
-    nativeBuildInputs = [ makeWrapper ];
+    nativeBuildInputs = [
+      makeWrapper
+    ];
     postInstall = ''
       mkdir -p $out/bin
       wrapProgram $out/bin/mix2nix \
