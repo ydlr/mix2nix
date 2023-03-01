@@ -100,13 +100,13 @@ defmodule Mix2nix do
 
   def nix_expression(
         allpkgs,
-        {:hex, name, version, _hash, builders, deps, "hexpm", hash2}
+        {:hex, name, version, _hash, builders, deps, <<"hexpm", _::binary>>, hash2}
       ),
       do: get_hexpm_expression(allpkgs, name, version, builders, deps, hash2)
 
   def nix_expression(
         allpkgs,
-        {:hex, name, version, _hash, builders, deps, "hexpm"}
+        {:hex, name, version, _hash, builders, deps, <<"hexpm", _::binary>>}
       ),
       do: get_hexpm_expression(allpkgs, name, version, builders, deps)
 
