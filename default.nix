@@ -18,6 +18,7 @@ beamPackages.mixRelease {
     mkdir -p $out/bin
     wrapProgram $out/bin/mix2nix \
       --set RELEASE_COOKIE REPLACEME \
+      --run 'export MIX2NIX_ARGV="$@"' \
       --add-flags "eval 'Mix2nix.CLI.main(System.argv())'"
   '';
 }
