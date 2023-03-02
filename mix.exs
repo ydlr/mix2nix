@@ -15,13 +15,14 @@ defmodule Mix2nix.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger, :crypto, :asn1, :public_key, :ssl, :inets]
+      extra_applications: [:logger]
     ]
   end
 
   defp deps do
     [
       {:hex_core, "~> 0.9"},
+      {:hackney, "~> 1.18"},
       {:temp, "~> 0.4"}
     ]
   end

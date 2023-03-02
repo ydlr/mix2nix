@@ -6,15 +6,7 @@ defmodule Mix2nix do
       &((key && String.to_charlist(key)) || &1)
     )
     |> Map.update!(:http_adapter, fn _ ->
-      {:hex_http_httpc,
-       %{
-         http_options: [
-           ssl: [
-             cacerts: :public_key.cacerts_get(),
-             verify: :verify_peer
-           ]
-         ]
-       }}
+      {Mix2nix.Hackney, %{}}
     end)
     |> :hex_repo.get_tarball(pkg, vsn)
     |> case do
