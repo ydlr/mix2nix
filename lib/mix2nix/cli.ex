@@ -1,4 +1,6 @@
 defmodule Mix2nix.CLI do
+  alias Mix2nix.Env
+
   def main(argv0 \\ []) do
     argv =
       argv0 ++
@@ -9,15 +11,16 @@ defmodule Mix2nix.CLI do
     {opt, args, _invalid} =
       OptionParser.parse(argv,
         switches: [
-          hex_get_pkg: :string,
+          hex_pkg_get: :string,
           hex_pkg_vsn: :string,
+          hex_pkg_org: :string,
           hex_api_key: :string,
           version: :boolean,
           help: :boolean
         ]
       )
 
-    hex_get_pkg = opt[:hex_get_pkg]
+    env = Env.new(opt)
 
     cond do
       opt[:version] ->
@@ -27,18 +30,10 @@ defmodule Mix2nix.CLI do
       opt[:help] ->
         print_usage() |> IO.puts()
 
-      hex_get_pkg ->
-        hex_pkg_vsn = opt[:hex_pkg_vsn]
+      env ->
         :ok = start_apps()
-
-        tar =
-          Mix2nix.hex_get_pkg(
-            pkg: hex_get_pkg,
-            vsn: opt[:hex_pkg_vsn],
-            key: opt[:hex_api_key]
-          )
-
-        :ok = File.write!("#{hex_get_pkg}-#{hex_pkg_vsn}.tar", tar)
+        tar = Mix2nix.hex_pkg_get(env)
+        :ok = File.write!("#{env.pkg}-#{env.vsn}.tar", tar)
 
       true ->
         case lock_file_from_args(args) do

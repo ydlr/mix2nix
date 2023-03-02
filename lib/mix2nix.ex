@@ -1,13 +1,11 @@
 defmodule Mix2nix do
-  def hex_get_pkg(pkg: pkg, vsn: vsn, key: key) do
+  alias Mix2nix.Env
+
+  def hex_pkg_get(%Env{pkg: pkg, vsn: vsn, org: org, key: key}) do
     :hex_core.default_config()
-    |> Map.update!(
-      :api_key,
-      &((key && String.to_charlist(key)) || &1)
-    )
-    |> Map.update!(:http_adapter, fn _ ->
-      {Mix2nix.Hackney, %{}}
-    end)
+    |> Map.update!(:http_adapter, fn _ -> {Mix2nix.Hackney, %{}} end)
+    |> Map.update!(:repo_organization, &((org && org) || &1))
+    |> Map.update!(:repo_key, &((key && Env.unshield(key)) || &1))
     |> :hex_repo.get_tarball(pkg, vsn)
     |> case do
       {:ok, {200, %{}, tar}} ->
@@ -101,7 +99,10 @@ defmodule Mix2nix do
   end
 
   def get_hash(name, version) do
-    tar = hex_get_pkg(pkg: name, vsn: version, key: nil)
+    #
+    # TODO : !!!
+    #
+    tar = hex_pkg_get(%Env{pkg: name, vsn: version, org: nil, key: nil})
     Temp.track!()
     {:ok, _, tmp} = Temp.open()
     :ok = File.write!(tmp, tar)
