@@ -121,37 +121,68 @@ defmodule Mix2nix do
 
   def nix_expression(
         allpkgs,
-        {:hex, name, version, _hash, builders, deps, <<"hexpm", _::binary>>, hash2}
-      ),
-      do: get_hexpm_expression(allpkgs, name, version, builders, deps, hash2)
+        {:hex, name, version, _hash, builders, deps, <<"hexpm", org::binary>>, hash2}
+      ) do
+    get_hexpm_expression(
+      allpkgs,
+      %Env{pkg: Atom.to_string(name), vsn: version, org: parse_org(org), key: nil},
+      builders,
+      deps,
+      hash2
+    )
+  end
 
   def nix_expression(
         allpkgs,
-        {:hex, name, version, _hash, builders, deps, <<"hexpm", _::binary>>}
-      ),
-      do: get_hexpm_expression(allpkgs, name, version, builders, deps)
+        {:hex, name, version, _hash, builders, deps, <<"hexpm", org::binary>>}
+      ) do
+    get_hexpm_expression(
+      allpkgs,
+      %Env{pkg: Atom.to_string(name), vsn: version, org: parse_org(org), key: nil},
+      builders,
+      deps
+    )
+  end
 
   def nix_expression(_allpkgs, _pkg) do
     ""
   end
 
-  defp get_hexpm_expression(allpkgs, name, version, builders, deps, sha256 \\ nil) do
-    name = Atom.to_string(name)
+  defp parse_org(<<":", org::binary>>), do: org
+  defp parse_org(<<>>), do: nil
+
+  defp get_hexpm_expression(allpkgs, env, builders, deps, sha256 \\ nil) do
+    %Env{pkg: name, vsn: version, org: org} = env
     buildEnv = get_build_env(builders, name)
     sha256 = sha256 || get_hash(name, version)
     deps = dep_string(allpkgs, deps)
+
+    src =
+      if org do
+        """
+        src = fetchHexOrg {
+                pkg = "${name}";
+                version = "${version}";
+                sha256 = "#{sha256}";
+                inherit hexOrg hexKey;
+              };
+        """
+      else
+        """
+        src = fetchHex {
+                pkg = "${name}";
+                version = "${version}";
+                sha256 = "#{sha256}";
+              };
+        """
+      end
 
     """
         #{name} = #{buildEnv} rec {
           name = "#{name}";
           version = "#{version}";
 
-          src = fetchHex {
-            pkg = "${name}";
-            version = "${version}";
-            sha256 = "#{sha256}";
-          };
-
+          #{src}
           beamDeps = #{deps};
         };
     """
@@ -159,12 +190,25 @@ defmodule Mix2nix do
 
   defp wrap(pkgs) do
     """
-    { lib, beamPackages, overrides ? (x: y: {}) }:
+    { lib,
+      beamPackages,
+      overrides ? (x: y: {}),
+      #
+      # NOTE : for private hex org pkgs only
+      #
+      stdenv ? null,
+      stdenvNoCC ? null,
+      mix2nix ? null,
+      hexOrg ? null,
+      hexKey ? null
+    }:
 
     let
       buildRebar3 = lib.makeOverridable beamPackages.buildRebar3;
       buildMix = lib.makeOverridable beamPackages.buildMix;
       buildErlangMk = lib.makeOverridable beamPackages.buildErlangMk;
+
+      fetchHexOrg = (#{fetch_hex_org()}  );
 
       self = packages // (overrides self packages);
 
@@ -172,6 +216,70 @@ defmodule Mix2nix do
     #{pkgs}
       };
     in self
+    """
+  end
+
+  defp fetch_hex_org do
+    """
+    {
+        pkg
+        , version
+        , sha256
+        , meta ? { }
+        , hexOrg
+        , hexKey
+        }:
+
+        let fetchHexCore =
+          stdenvNoCC.mkDerivation (rec {
+            name = "${pkg}-${version}.tar";
+            buildCommand = ''
+              ${mix2nix}/bin/mix2nix \\
+                --hex-pkg-get ${pkg} \\
+                --hex-pkg-vsn ${version} \\
+                --hex-pkg-org ${hexOrg} \\
+                --hex-api-key ${hexKey}
+              mv ${name} $out
+            '';
+            outputHashAlgo = "sha256";
+            outputHash = sha256;
+          });
+
+        in
+          stdenv.mkDerivation ({
+            pname = "hex-source-${pkg}";
+            inherit version;
+            dontBuild = true;
+            dontConfigure = true;
+            dontFixup = true;
+
+            src = fetchHexCore;
+
+            unpackCmd = ''
+              tar -xf $curSrc contents.tar.gz CHECKSUM metadata.config
+              mkdir contents
+              tar -C contents -xzf contents.tar.gz
+              mv metadata.config contents/hex_metadata.config
+
+              # To make the extracted hex tarballs appear legitimate to mix, we need to
+              # make sure they contain not just the contents of contents.tar.gz but also
+              # a .hex file with some lock metadata.
+              # We use an old version of .hex file per hex's mix_task_test.exs since it
+              # is just plain-text instead of an encoded format.
+              # See: https://github.com/hexpm/hex/blob/main/test/hex/mix_task_test.exs#L410
+              echo -n "${pkg},${version},$(cat CHECKSUM | tr '[:upper:]' '[:lower:]'),hexpm" > contents/.hex
+            '';
+
+            installPhase = ''
+              runHook preInstall
+              mkdir "$out"
+              cp -Hrt "$out" .
+              success=1
+              runHook postInstall
+            '';
+
+            inherit meta;
+          })
     """
   end
 end
