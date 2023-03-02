@@ -20,6 +20,8 @@ defmodule Mix2nix.Env do
         org: org,
         key: shield(key)
       }
+    else
+      _ -> nil
     end
   end
 
