@@ -2,7 +2,7 @@
   beamPackages,
   overrides ? (x: y: {}),
   #
-  # NOTE : for private hex org pkgs only
+  # NOTE : for private hex org and git pkgs only
   #
   stdenv ? null,
   stdenvNoCC ? null,
@@ -15,6 +15,29 @@ let
   buildRebar3 = lib.makeOverridable beamPackages.buildRebar3;
   buildMix = lib.makeOverridable beamPackages.buildMix;
   buildErlangMk = lib.makeOverridable beamPackages.buildErlangMk;
+
+  fetchGitMixDep = attrs@{ name, url, rev, ref ? null }: stdenv.mkDerivation {
+    inherit name;
+    src = builtins.fetchGit attrs;
+    nativeBuildInputs = [ beamPackages.elixir ];
+    outputs = [ "out" "version" "deps" ];
+    # Create a fake .git folder that will be acceptable to Mix's SCM lock check:
+    # https://github.com/elixir-lang/elixir/blob/74bfab8ee271e53d24cb0012b5db1e2a931e0470/lib/mix/lib/mix/scm/git.ex#L242
+    buildPhase = ''
+        mkdir -p .git/objects .git/refs
+        echo ${rev} > .git/HEAD
+        echo '[remote "origin"]' > .git/config
+        echo "    url = ${url}" >> .git/config
+    '';
+    installPhase = ''
+        # The main package
+        cp -r . $out
+        # Metadata: version
+        echo "File.write!(\"$version\", Mix.Project.config()[:version])" | iex -S mix cmd true
+        # Metadata: deps as a newline separated string
+        echo "File.write!(\"$deps\", Mix.Project.config()[:deps] |> Enum.map(& &1 |> elem(0) |> Atom.to_string()) |> Enum.join(\" \"))" | iex -S mix cmd true
+    '';
+  };
 
   fetchHexOrg = ({
     pkg
