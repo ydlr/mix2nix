@@ -14,7 +14,9 @@ defmodule Mix2nix.CLI do
           hex_pkg_get: :string,
           hex_pkg_vsn: :string,
           hex_pkg_org: :string,
-          hex_api_key: :string,
+          hex_key_prv: :string,
+          hex_key_pub: :string,
+          hex_srv_url: :string,
           version: :boolean,
           help: :boolean
         ]

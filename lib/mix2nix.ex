@@ -1,14 +1,26 @@
 defmodule Mix2nix do
   alias Mix2nix.Env
 
-  def hex_pkg_get(%Env{pkg: pkg, vsn: vsn, org: org, key: key}) do
+  def hex_pkg_get(%Env{pkg: pkg, vsn: vsn, org: org, prv: prv, pub: pub, url: url} = env) do
+    IO.puts("Tarball fetch with " <> inspect(env))
+
+    org_key =
+      if url do
+        :repo_name
+      else
+        :repo_organization
+      end
+
     :hex_core.default_config()
     |> Map.update!(:http_adapter, fn _ -> {Mix2nix.Hackney, %{}} end)
-    |> Map.update!(:repo_organization, &((org && org) || &1))
-    |> Map.update!(:repo_key, &((key && Env.unshield(key)) || &1))
+    |> Map.update!(org_key, &((org && org) || &1))
+    |> Map.update!(:repo_key, &((prv && Env.unshield(prv)) || &1))
+    |> Map.update!(:repo_public_key, &((pub && pub) || &1))
+    |> Map.update!(:repo_url, &((url && url) || &1))
     |> :hex_repo.get_tarball(pkg, vsn)
     |> case do
       {:ok, {200, %{}, tar}} ->
+        IO.puts("Tarball fetch success!")
         tar
 
       failure ->
@@ -102,7 +114,16 @@ defmodule Mix2nix do
     #
     # TODO : !!!
     #
-    tar = hex_pkg_get(%Env{pkg: name, vsn: version, org: nil, key: nil})
+    tar =
+      hex_pkg_get(%Env{
+        pkg: name,
+        vsn: version,
+        org: nil,
+        prv: nil,
+        pub: nil,
+        url: nil
+      })
+
     Temp.track!()
     {:ok, _, tmp} = Temp.open()
     :ok = File.write!(tmp, tar)
@@ -126,7 +147,14 @@ defmodule Mix2nix do
       ) do
     get_hexpm_expression(
       allpkgs,
-      %Env{pkg: Atom.to_string(name), vsn: version, org: parse_org(org), key: nil},
+      %Env{
+        pkg: Atom.to_string(name),
+        vsn: version,
+        org: parse_org(org),
+        prv: nil,
+        pub: nil,
+        url: nil
+      },
       builders,
       deps,
       hash2
@@ -140,7 +168,58 @@ defmodule Mix2nix do
       ) do
     get_hexpm_expression(
       allpkgs,
-      %Env{pkg: Atom.to_string(name), vsn: version, org: parse_org(org), key: nil},
+      %Env{
+        pkg: Atom.to_string(name),
+        vsn: version,
+        org: parse_org(org),
+        prv: nil,
+        pub: nil,
+        url: nil
+      },
+      builders,
+      deps
+    )
+  end
+
+  def nix_expression(
+        allpkgs,
+        _,
+        {:hex, name, version, _hash, builders, deps, nonhex, hash2}
+      ) do
+    get_hexpm_expression(
+      allpkgs,
+      %Env{
+        pkg: Atom.to_string(name),
+        vsn: version,
+        org: nonhex,
+        prv: nil,
+        pub: nil,
+        url: nil
+      },
+      builders,
+      deps,
+      hash2
+    )
+  end
+
+  def nix_expression(
+        allpkgs,
+        _,
+        {:hex, name, version, _hash, builders, deps, nonhex}
+      ) do
+    get_hexpm_expression(
+      allpkgs,
+      #
+      # TODO : propagate creds for nonhex tar fetch
+      #
+      %Env{
+        pkg: Atom.to_string(name),
+        vsn: version,
+        org: nonhex,
+        prv: nil,
+        pub: nil,
+        url: nil
+      },
       builders,
       deps
     )
@@ -190,7 +269,7 @@ defmodule Mix2nix do
                 pkg = "${name}";
                 version = "${version}";
                 sha256 = "#{sha256}";
-                inherit hexOrg hexKey;
+                inherit hexOrg hexPrv;
               };
         """
       else
@@ -226,7 +305,9 @@ defmodule Mix2nix do
       stdenvNoCC ? null,
       mix2nix ? null,
       hexOrg ? null,
-      hexKey ? null
+      hexPrv ? null,
+      hexPub ? null,
+      hexUrl ? null
     }:
 
     let
@@ -276,23 +357,34 @@ defmodule Mix2nix do
         , sha256
         , meta ? { }
         , hexOrg
-        , hexKey
+        , hexPrv
+        , hexPub ? null
+        , hexUrl ? null
         }:
 
-        let fetchHexCore =
-          stdenvNoCC.mkDerivation (rec {
-            name = "${pkg}-${version}.tar";
-            buildCommand = ''
-              ${mix2nix}/bin/mix2nix \\
-                --hex-pkg-get ${pkg} \\
-                --hex-pkg-vsn ${version} \\
-                --hex-pkg-org ${hexOrg} \\
-                --hex-api-key ${hexKey}
-              mv ${name} $out
-            '';
-            outputHashAlgo = "sha256";
-            outputHash = sha256;
-          });
+        let
+          hexPubStr =
+            if hexPub == null
+            then ""
+            else "--hex-key-pub ${hexPub}";
+          hexUrlStr =
+            if hexUrl == null
+            then ""
+            else "--hex-srv-url ${hexUrl}";
+          fetchHexCore =
+            stdenvNoCC.mkDerivation (rec {
+              name = "${pkg}-${version}.tar";
+              buildCommand = ''
+                ${mix2nix}/bin/mix2nix \\
+                  --hex-pkg-get ${pkg} \\
+                  --hex-pkg-vsn ${version} \\
+                  --hex-pkg-org ${hexOrg} \\
+                  --hex-key-prv ${hexPrv} ${hexPubStr} ${hexUrlStr}
+                mv ${name} $out
+              '';
+              outputHashAlgo = "sha256";
+              outputHash = sha256;
+            });
 
         in
           stdenv.mkDerivation ({

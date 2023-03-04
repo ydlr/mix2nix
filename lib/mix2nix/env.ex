@@ -4,7 +4,9 @@ defmodule Mix2nix.Env do
     :pkg,
     :vsn,
     :org,
-    :key
+    :prv,
+    :pub,
+    :url
   ]
   defstruct @enforce_keys
 
@@ -13,12 +15,16 @@ defmodule Mix2nix.Env do
     with pkg when is_binary(pkg) <- argv[:hex_pkg_get],
          vsn when is_binary(vsn) <- argv[:hex_pkg_vsn],
          org when is_nil(org) or is_binary(org) <- argv[:hex_pkg_org],
-         key when is_nil(key) or is_binary(key) <- argv[:hex_api_key] do
+         prv when is_nil(prv) or is_binary(prv) <- argv[:hex_key_prv],
+         pub when is_nil(pub) or is_binary(pub) <- argv[:hex_key_pub],
+         url when is_nil(url) or is_binary(url) <- argv[:hex_srv_url] do
       %__MODULE__{
         pkg: pkg,
         vsn: vsn,
         org: org,
-        key: shield(key)
+        prv: shield(prv),
+        pub: pub,
+        url: url
       }
     else
       _ -> nil
