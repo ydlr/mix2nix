@@ -8,6 +8,9 @@ beamPackages.mixRelease {
   pname = "mix2nix";
   version = "0.1.6";
   src = ./.;
+  mixNixDeps = import ./nix/mix-deps.nix {
+    inherit lib beamPackages;
+  };
   nativeBuildInputs = [
     makeWrapper
   ];
