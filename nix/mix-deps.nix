@@ -8,7 +8,9 @@
   stdenvNoCC ? null,
   mix2nix ? null,
   hexOrg ? null,
-  hexKey ? null
+  hexPrv ? null,
+  hexPub ? null,
+  hexUrl ? null
 }:
 
 let
@@ -45,23 +47,34 @@ let
     , sha256
     , meta ? { }
     , hexOrg
-    , hexKey
+    , hexPrv
+    , hexPub ? null
+    , hexUrl ? null
     }:
 
-    let fetchHexCore =
-      stdenvNoCC.mkDerivation (rec {
-        name = "${pkg}-${version}.tar";
-        buildCommand = ''
-          ${mix2nix}/bin/mix2nix \
-            --hex-pkg-get ${pkg} \
-            --hex-pkg-vsn ${version} \
-            --hex-pkg-org ${hexOrg} \
-            --hex-api-key ${hexKey}
-          mv ${name} $out
-        '';
-        outputHashAlgo = "sha256";
-        outputHash = sha256;
-      });
+    let
+      hexPubStr =
+        if hexPub == null
+        then ""
+        else "--hex-key-pub ${hexPub}";
+      hexUrlStr =
+        if hexUrl == null
+        then ""
+        else "--hex-srv-url ${hexUrl}";
+      fetchHexCore =
+        stdenvNoCC.mkDerivation (rec {
+          name = "${pkg}-${version}.tar";
+          buildCommand = ''
+            ${mix2nix}/bin/mix2nix \
+              --hex-pkg-get ${pkg} \
+              --hex-pkg-vsn ${version} \
+              --hex-pkg-org ${hexOrg} \
+              --hex-key-prv ${hexPrv} ${hexPubStr} ${hexUrlStr}
+            mv ${name} $out
+          '';
+          outputHashAlgo = "sha256";
+          outputHash = sha256;
+        });
 
     in
       stdenv.mkDerivation ({
@@ -103,95 +116,135 @@ let
   self = packages // (overrides self packages);
 
   packages = with beamPackages; with self; {
-    cowboy = buildErlangMk rec {
-      name = "cowboy";
+    certifi = buildRebar3 rec {
+      name = "certifi";
       version = "2.9.0";
 
       src = fetchHex {
         pkg = "${name}";
         version = "${version}";
-        sha256 = "2c729f934b4e1aa149aff882f57c6372c15399a20d54f65c8d67bef583021bde";
-      };
-
-      beamDeps = [ cowlib ranch ];
-    };
-
-    cowlib = buildRebar3 rec {
-      name = "cowlib";
-      version = "2.11.0";
-
-      src = fetchHex {
-        pkg = "${name}";
-        version = "${version}";
-        sha256 = "2b3e9da0b21c4565751a6d4901c20d1b4cc25cbb7fd50d91d2ab6dd287bc86a9";
+        sha256 = "266da46bdb06d6c6d35fde799bcb28d36d985d424ad7c08b5bb48f5b5cdd4641";
       };
 
       beamDeps = [];
     };
 
-    decimal = buildMix rec {
-      name = "decimal";
-      version = "2.0.0";
+    hackney = buildRebar3 rec {
+      name = "hackney";
+      version = "1.18.1";
 
       src = fetchHex {
         pkg = "${name}";
         version = "${version}";
-        sha256 = "34666e9c55dea81013e77d9d87370fe6cb6291d1ef32f46a1600230b1d44f577";
+        sha256 = "a4ecdaff44297e9b5894ae499e9a070ea1888c84afdd1fd9b7b2bc384950128e";
+      };
+
+      beamDeps = [ certifi idna metrics mimerl parse_trans ssl_verify_fun unicode_util_compat ];
+    };
+
+    hex_core = buildRebar3 rec {
+      name = "hex_core";
+      version = "0.9.0";
+
+      src = fetchHex {
+        pkg = "${name}";
+        version = "${version}";
+        sha256 = "f160418b48511a08dfdb473814a8c8f95ed109878a74649464f13816036cc2f1";
       };
 
       beamDeps = [];
     };
 
-    ecto = buildMix rec {
-      name = "ecto";
-      version = "3.9.4";
+    idna = buildRebar3 rec {
+      name = "idna";
+      version = "6.1.1";
 
       src = fetchHex {
         pkg = "${name}";
         version = "${version}";
-        sha256 = "de5f988c142a3aa4ec18b85a4ec34a2390b65b24f02385c1144252ff6ff8ee75";
+        sha256 = "92376eb7894412ed19ac475e4a86f7b413c1b9fbb5bd16dccd57934157944cea";
       };
 
-      beamDeps = [ decimal jason telemetry ];
+      beamDeps = [ unicode_util_compat ];
     };
 
-    jason = buildMix rec {
-      name = "jason";
-      version = "1.4.0";
+    metrics = buildRebar3 rec {
+      name = "metrics";
+      version = "1.0.1";
 
       src = fetchHex {
         pkg = "${name}";
         version = "${version}";
-        sha256 = "79a3791085b2a0f743ca04cec0f7be26443738779d09302e01318f97bdb82121";
-      };
-
-      beamDeps = [ decimal ];
-    };
-
-    ranch = buildRebar3 rec {
-      name = "ranch";
-      version = "1.8.0";
-
-      src = fetchHex {
-        pkg = "${name}";
-        version = "${version}";
-        sha256 = "1rfz5ld54pkd2w25jadyznia2vb7aw9bclck21fizargd39wzys9";
+        sha256 = "69b09adddc4f74a40716ae54d140f93beb0fb8978d8636eaded0c31b6f099f16";
       };
 
       beamDeps = [];
     };
 
-    telemetry = buildRebar3 rec {
-      name = "telemetry";
-      version = "1.2.1";
+    mimerl = buildRebar3 rec {
+      name = "mimerl";
+      version = "1.2.0";
 
       src = fetchHex {
         pkg = "${name}";
         version = "${version}";
-        sha256 = "dad9ce9d8effc621708f99eac538ef1cbe05d6a874dd741de2e689c47feafed5";
+        sha256 = "f278585650aa581986264638ebf698f8bb19df297f66ad91b18910dfc6e19323";
+      };
+
+      beamDeps = [];
+    };
+
+    parse_trans = buildRebar3 rec {
+      name = "parse_trans";
+      version = "3.3.1";
+
+      src = fetchHex {
+        pkg = "${name}";
+        version = "${version}";
+        sha256 = "07cd9577885f56362d414e8c4c4e6bdf10d43a8767abb92d24cbe8b24c54888b";
+      };
+
+      beamDeps = [];
+    };
+
+    ssl_verify_fun = buildRebar3 rec {
+      name = "ssl_verify_fun";
+      version = "1.1.6";
+
+      src = fetchHex {
+        pkg = "${name}";
+        version = "${version}";
+        sha256 = "bdb0d2471f453c88ff3908e7686f86f9be327d065cc1ec16fa4540197ea04680";
+      };
+
+      beamDeps = [];
+    };
+
+    temp = buildMix rec {
+      name = "temp";
+      version = "0.4.7";
+
+      src = fetchHex {
+        pkg = "${name}";
+        version = "${version}";
+        sha256 = "6af19e7d6a85a427478be1021574d1ae2a1e1b90882586f06bde76c63cd03e0d";
+      };
+
+      beamDeps = [];
+    };
+
+    unicode_util_compat = buildRebar3 rec {
+      name = "unicode_util_compat";
+      version = "0.7.0";
+
+      src = fetchHex {
+        pkg = "${name}";
+        version = "${version}";
+        sha256 = "25eee6d67df61960cf6a794239566599b09e17e668d3700247bc498638152521";
       };
 
       beamDeps = [];
     };
   };
 in self
+

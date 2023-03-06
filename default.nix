@@ -1,17 +1,24 @@
-{ pkgs ? import <nixpkgs> {} }:
+{ sources ? import ./nix/sources.nix
+, pkgs ? import sources.nixpkgs { }
+}:
 
 with pkgs;
 
-stdenv.mkDerivation {
-	pname = "mix2nix";
-	version = "0.1.6";
-
-	src = ./.;
-
-	buildInputs = [ erlang ];
-	nativeBuildInputs = [ elixir ];
-
-	buildPhase = "mix escript.build";
-
-	installPhase = "install -Dt $out/bin mix2nix";
+beamPackages.mixRelease {
+  pname = "mix2nix";
+  version = "0.1.6";
+  src = ./.;
+  mixNixDeps = import ./nix/mix-deps.nix {
+    inherit lib beamPackages;
+  };
+  nativeBuildInputs = [
+    makeWrapper
+  ];
+  postInstall = ''
+    mkdir -p $out/bin
+    wrapProgram $out/bin/mix2nix \
+      --set RELEASE_COOKIE REPLACEME \
+      --run 'export MIX2NIX_ARGV="$@"' \
+      --add-flags "eval 'Mix2nix.CLI.main(System.argv())'"
+  '';
 }
