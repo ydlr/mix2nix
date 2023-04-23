@@ -99,7 +99,7 @@ defmodule Mix2nix do
 		{:hex, name, version, _hash, builders, deps, "hexpm"}
 	), do: get_hexpm_expression(allpkgs, name, version, builders, deps)
 
-    def nix_expression(_allpkgs, name_str, {:git, url, rev, []}) do
+    def nix_expression(_allpkgs, name_str, {:git, url, rev, params}) when is_list(params) do
 		"""
 		    #{name_str} = buildMix rec {
 		      name = "#{name_str}";
