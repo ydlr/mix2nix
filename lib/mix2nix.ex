@@ -108,6 +108,7 @@ defmodule Mix2nix do
 		        name = "${name}";
 		        url = "#{url}";
 		        rev = "#{rev}";
+		        ref = "#{Keyword.get(params, :branch, "HEAD")}";
 		      };
 		      version = builtins.readFile src.version;
 		      # Interection of all of the packages mix2nix found and those
