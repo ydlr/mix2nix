@@ -9,7 +9,7 @@ defmodule Mix2nix do
 		deps
 		|> Map.to_list()
 		|> Enum.sort(:asc)
-		|> Enum.map(fn {_, v} -> nix_expression(deps, v) end)
+		|> Enum.map(fn {k, v} -> nix_expression(deps, k, v) end)
 		|> Enum.reject(fn x -> x == "" end)
 		|> Enum.join("\n")
 		|> String.trim("\n")
@@ -91,27 +91,30 @@ defmodule Mix2nix do
 
 	def nix_expression(
 		allpkgs,
-		{:hex, name, version, _hash, builders, deps, "hexpm", hash2}
-	), do: get_hexpm_expression(allpkgs, name, version, builders, deps, hash2)
+		name,
+		{:hex, hex_name, version, _hash, builders, deps, "hexpm", hash2}
+	), do: get_hexpm_expression(allpkgs, name, hex_name, version, builders, deps, hash2)
 
 	def nix_expression(
 		allpkgs,
-		{:hex, name, version, _hash, builders, deps, "hexpm"}
-	), do: get_hexpm_expression(allpkgs, name, version, builders, deps)
+		name,
+		{:hex, hex_name, version, _hash, builders, deps, "hexpm"}
+	), do: get_hexpm_expression(allpkgs, name, hex_name, version, builders, deps)
 
-	def nix_expression(_allpkgs, _pkg) do
+	def nix_expression(_allpkgs, _name, _pkg) do
 		""
 	end
 
-	defp get_hexpm_expression(allpkgs, name, version, builders, deps, sha256 \\ nil) do
-		name = Atom.to_string(name)
+	defp get_hexpm_expression(allpkgs, name, hex_name, version, builders, deps, sha256 \\ nil) do
+	  name = Atom.to_string(name)
+		hex_name = Atom.to_string(hex_name)
 		buildEnv = get_build_env(builders, name)
-		sha256 = sha256 || get_hash(name, version)
+		sha256 = sha256 || get_hash(hex_name, version)
 		deps = dep_string(allpkgs, deps)
 
 		"""
 		    #{name} = #{buildEnv} rec {
-		      name = "#{name}";
+		      name = "#{hex_name}";
 		      version = "#{version}";
 
 		      src = fetchHex {
