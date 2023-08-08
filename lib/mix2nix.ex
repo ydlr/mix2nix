@@ -114,11 +114,11 @@ defmodule Mix2nix do
 
 		"""
 		    #{name} = #{buildEnv} rec {
-		      name = "#{hex_name}";
+		      name = "#{name}";
 		      version = "#{version}";
 
 		      src = fetchHex {
-		        pkg = "${name}";
+		        pkg = "#{hex_name}";
 		        version = "${version}";
 		        sha256 = "#{sha256}";
 		      };
