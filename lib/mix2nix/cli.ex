@@ -7,7 +7,7 @@ defmodule Mix2nix.CLI do
 		cond do
 			opt[:version] ->
 				vsn = Application.spec(:mix2nix, :vsn) |> to_string()
-				IO.puts("mix2xix " <> vsn)
+				IO.puts("mix2nix " <> vsn)
 			opt[:help] ->
 				print_usage() |> IO.puts()
 			true ->
