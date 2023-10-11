@@ -3,15 +3,15 @@
 with pkgs;
 
 stdenv.mkDerivation {
-	pname = "mix2nix";
-	version = "0.1.8";
+  pname = "mix2nix";
+  version = "0.1.8";
 
-	src = ./.;
+  src = ./.;
 
-	buildInputs = [ erlang ];
-	nativeBuildInputs = [ elixir ];
+  buildInputs = [ erlang ];
+  nativeBuildInputs = [ elixir ];
 
-	buildPhase = "mix escript.build";
+  buildPhase = "mix escript.build";
 
-	installPhase = "install -Dt $out/bin mix2nix";
+  installPhase = "install -Dt $out/bin mix2nix";
 }
