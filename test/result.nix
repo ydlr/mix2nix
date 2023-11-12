@@ -123,6 +123,15 @@ let
       };
 
       beamDeps = [ acceptor_pool chatterbox ctx gproc ];
+
+      unpackPhase = ''
+        runHook preUnpack
+        unpackFile "$src"
+        chmod -R u+w -- hex-source-grpcbox-0.16.0
+        mv hex-source-grpcbox-0.16.0 grpcbox
+        sourceRoot=grpcbox
+        runHook postUnpack
+      '';
     };
 
     hpack = buildRebar3 rec {

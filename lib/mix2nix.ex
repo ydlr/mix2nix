@@ -130,7 +130,7 @@ defmodule Mix2nix do
             sha256 = "#{sha256}";
           };
 
-          beamDeps = #{deps};
+          beamDeps = #{deps};#{hexpm_expression_extras(name, version)}
         };
     """
   end
@@ -152,4 +152,22 @@ defmodule Mix2nix do
     in self
     """
   end
+
+  defp hexpm_expression_extras("grpcbox", version) do
+    """
+
+
+          unpackPhase = ''
+            runHook preUnpack
+            unpackFile "$src"
+            chmod -R u+w -- hex-source-grpcbox-#{version}
+            mv hex-source-grpcbox-#{version} grpcbox
+            sourceRoot=grpcbox
+            runHook postUnpack
+          '';
+    """
+    |> String.trim_trailing("\n")
+  end
+
+  defp hexpm_expression_extras(_, _), do: ""
 end
