@@ -27,3 +27,6 @@ mix2nix-*.tar
 
 # Remove temporary files
 *~
+
+# Remove .direnv directory
+.direnv
