@@ -174,7 +174,7 @@ defmodule Mix2nix do
             runHook preUnpack
             unpackFile "$src"
             chmod -R u+w -- hex-source-png-#{version}
-            mv hex-source-grpcbox-#{version} png
+            mv hex-source-png-#{version} png
             sourceRoot=png
             runHook postUnpack
           '';
