@@ -168,5 +168,18 @@ defmodule Mix2nix do
     """
   end
 
+  defp hexpm_expression_extras("png", version) do
+    """
+          unpackPhase = ''
+            runHook preUnpack
+            unpackFile "$src"
+            chmod -R u+w -- hex-source-png-#{version}
+            mv hex-source-grpcbox-#{version} png
+            sourceRoot=png
+            runHook postUnpack
+          '';
+    """
+  end
+
   defp hexpm_expression_extras(_, _), do: ""
 end

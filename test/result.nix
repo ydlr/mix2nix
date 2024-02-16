@@ -160,6 +160,28 @@ let
       beamDeps = [ decimal ];
     };
 
+    png = buildRebar3 rec {
+      name = "png";
+      version = "0.2.1";
+
+      src = fetchHex {
+        pkg = "png";
+        version = "${version}";
+        sha256 = "279345e07108c604871a21f1c91f716810ab559af2b20d6f302e0a98265ef72e";
+      };
+
+      beamDeps = [];
+
+      unpackPhase = ''
+        runHook preUnpack
+        unpackFile "$src"
+        chmod -R u+w -- hex-source-png-0.2.1
+        mv hex-source-png-0.2.1 png
+        sourceRoot=png
+        runHook postUnpack
+      '';
+    };
+
     ranch = buildRebar3 rec {
       name = "ranch";
       version = "1.8.0";
