@@ -124,6 +124,8 @@ defmodule Mix2nix do
           name = "#{name}";
           version = "#{version}";
 
+          inherit mixEnv;
+
           src = fetchHex {
             pkg = "#{hex_name}";
             version = "${version}";
@@ -138,7 +140,7 @@ defmodule Mix2nix do
 
   defp wrap(pkgs) do
     """
-    { lib, beamPackages, overrides ? (x: y: {}) }:
+    { lib, beamPackages, overrides ? (x: y: {}), mixEnv ? "prod" }:
 
     let
       buildRebar3 = lib.makeOverridable beamPackages.buildRebar3;
