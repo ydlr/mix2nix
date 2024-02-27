@@ -1,4 +1,4 @@
-{ lib, beamPackages, overrides ? (x: y: {}) }:
+{ lib, beamPackages, overrides ? (x: y: {}), mixEnv ? "prod" }:
 
 let
   buildRebar3 = lib.makeOverridable beamPackages.buildRebar3;
@@ -11,6 +11,8 @@ let
     acceptor_pool = buildRebar3 rec {
       name = "acceptor_pool";
       version = "1.0.0";
+
+      inherit mixEnv;
 
       src = fetchHex {
         pkg = "acceptor_pool";
@@ -25,6 +27,8 @@ let
       name = "chatterbox";
       version = "0.13.0";
 
+      inherit mixEnv;
+
       src = fetchHex {
         pkg = "ts_chatterbox";
         version = "${version}";
@@ -37,6 +41,8 @@ let
     cowboy = buildErlangMk rec {
       name = "cowboy";
       version = "2.9.0";
+
+      inherit mixEnv;
 
       src = fetchHex {
         pkg = "cowboy";
@@ -51,6 +57,8 @@ let
       name = "cowlib";
       version = "2.11.0";
 
+      inherit mixEnv;
+
       src = fetchHex {
         pkg = "cowlib";
         version = "${version}";
@@ -63,6 +71,8 @@ let
     ctx = buildRebar3 rec {
       name = "ctx";
       version = "0.6.0";
+
+      inherit mixEnv;
 
       src = fetchHex {
         pkg = "ctx";
@@ -77,6 +87,8 @@ let
       name = "decimal";
       version = "2.0.0";
 
+      inherit mixEnv;
+
       src = fetchHex {
         pkg = "decimal";
         version = "${version}";
@@ -89,6 +101,8 @@ let
     ecto = buildMix rec {
       name = "ecto";
       version = "3.9.4";
+
+      inherit mixEnv;
 
       src = fetchHex {
         pkg = "ecto";
@@ -103,6 +117,8 @@ let
       name = "gproc";
       version = "0.8.0";
 
+      inherit mixEnv;
+
       src = fetchHex {
         pkg = "gproc";
         version = "${version}";
@@ -115,6 +131,8 @@ let
     grpcbox = buildRebar3 rec {
       name = "grpcbox";
       version = "0.16.0";
+
+      inherit mixEnv;
 
       src = fetchHex {
         pkg = "grpcbox";
@@ -138,6 +156,8 @@ let
       name = "hpack";
       version = "0.2.3";
 
+      inherit mixEnv;
+
       src = fetchHex {
         pkg = "hpack_erl";
         version = "${version}";
@@ -150,6 +170,8 @@ let
     jason = buildMix rec {
       name = "jason";
       version = "1.4.0";
+
+      inherit mixEnv;
 
       src = fetchHex {
         pkg = "jason";
@@ -164,6 +186,8 @@ let
       name = "ranch";
       version = "1.8.0";
 
+      inherit mixEnv;
+
       src = fetchHex {
         pkg = "ranch";
         version = "${version}";
@@ -176,6 +200,8 @@ let
     telemetry = buildRebar3 rec {
       name = "telemetry";
       version = "1.2.1";
+
+      inherit mixEnv;
 
       src = fetchHex {
         pkg = "telemetry";
