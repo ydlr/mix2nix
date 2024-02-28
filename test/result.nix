@@ -23,12 +23,12 @@ let
 
     chatterbox = buildRebar3 rec {
       name = "chatterbox";
-      version = "0.13.0";
+      version = "0.15.1";
 
       src = fetchHex {
         pkg = "ts_chatterbox";
         version = "${version}";
-        sha256 = "b93d19104d86af0b3f2566c4cba2a57d2e06d103728246ba1ac6c3c0ff010aa7";
+        sha256 = "4f75b91451338bc0da5f52f3480fa6ef6e3a2aeecfc33686d6b3d0a0948f31aa";
       };
 
       beamDeps = [ hpack ];
@@ -36,12 +36,12 @@ let
 
     cowboy = buildErlangMk rec {
       name = "cowboy";
-      version = "2.9.0";
+      version = "2.11.0";
 
       src = fetchHex {
         pkg = "cowboy";
         version = "${version}";
-        sha256 = "2c729f934b4e1aa149aff882f57c6372c15399a20d54f65c8d67bef583021bde";
+        sha256 = "0fa395437f1b0e104e0e00999f39d2ac5f4082ac5049b67a5b6d56ecc31b1403";
       };
 
       beamDeps = [ cowlib ranch ];
@@ -49,12 +49,12 @@ let
 
     cowlib = buildRebar3 rec {
       name = "cowlib";
-      version = "2.11.0";
+      version = "2.12.1";
 
       src = fetchHex {
         pkg = "cowlib";
         version = "${version}";
-        sha256 = "2b3e9da0b21c4565751a6d4901c20d1b4cc25cbb7fd50d91d2ab6dd287bc86a9";
+        sha256 = "163b73f6367a7341b33c794c4e88e7dbfe6498ac42dcd69ef44c5bc5507c8db0";
       };
 
       beamDeps = [];
@@ -75,12 +75,12 @@ let
 
     decimal = buildMix rec {
       name = "decimal";
-      version = "2.0.0";
+      version = "2.1.1";
 
       src = fetchHex {
         pkg = "decimal";
         version = "${version}";
-        sha256 = "34666e9c55dea81013e77d9d87370fe6cb6291d1ef32f46a1600230b1d44f577";
+        sha256 = "53cfe5f497ed0e7771ae1a475575603d77425099ba5faef9394932b35020ffcc";
       };
 
       beamDeps = [];
@@ -88,25 +88,25 @@ let
 
     ecto = buildMix rec {
       name = "ecto";
-      version = "3.9.4";
+      version = "3.11.1";
 
       src = fetchHex {
         pkg = "ecto";
         version = "${version}";
-        sha256 = "de5f988c142a3aa4ec18b85a4ec34a2390b65b24f02385c1144252ff6ff8ee75";
+        sha256 = "ebd3d3772cd0dfcd8d772659e41ed527c28b2a8bde4b00fe03e0463da0f1983b";
       };
 
-      beamDeps = [ decimal jason telemetry ];
+      beamDeps = [ decimal telemetry ];
     };
 
     gproc = buildRebar3 rec {
       name = "gproc";
-      version = "0.8.0";
+      version = "0.9.1";
 
       src = fetchHex {
         pkg = "gproc";
         version = "${version}";
-        sha256 = "580adafa56463b75263ef5a5df4c86af321f68694e7786cb057fd805d1e2a7de";
+        sha256 = "905088e32e72127ed9466f0bac0d8e65704ca5e73ee5a62cb073c3117916d507";
       };
 
       beamDeps = [];
@@ -114,12 +114,12 @@ let
 
     grpcbox = buildRebar3 rec {
       name = "grpcbox";
-      version = "0.16.0";
+      version = "0.17.1";
 
       src = fetchHex {
         pkg = "grpcbox";
         version = "${version}";
-        sha256 = "294df743ae20a7e030889f00644001370a4f7ce0121f3bbdaf13cf3169c62913";
+        sha256 = "4a3b5d7111daabc569dc9cbd9b202a3237d81c80bf97212fbc676832cb0ceb17";
       };
 
       beamDeps = [ acceptor_pool chatterbox ctx gproc ];
@@ -127,8 +127,8 @@ let
       unpackPhase = ''
         runHook preUnpack
         unpackFile "$src"
-        chmod -R u+w -- hex-source-grpcbox-0.16.0
-        mv hex-source-grpcbox-0.16.0 grpcbox
+        chmod -R u+w -- hex-source-grpcbox-${version}
+        mv hex-source-grpcbox-${version} grpcbox
         sourceRoot=grpcbox
         runHook postUnpack
       '';
@@ -136,28 +136,15 @@ let
 
     hpack = buildRebar3 rec {
       name = "hpack";
-      version = "0.2.3";
+      version = "0.3.0";
 
       src = fetchHex {
         pkg = "hpack_erl";
         version = "${version}";
-        sha256 = "06f580167c4b8b8a6429040df36cc93bba6d571faeaec1b28816523379cbb23a";
+        sha256 = "d6137d7079169d8c485c6962dfe261af5b9ef60fbc557344511c1e65e3d95fb0";
       };
 
       beamDeps = [];
-    };
-
-    jason = buildMix rec {
-      name = "jason";
-      version = "1.4.0";
-
-      src = fetchHex {
-        pkg = "jason";
-        version = "${version}";
-        sha256 = "79a3791085b2a0f743ca04cec0f7be26443738779d09302e01318f97bdb82121";
-      };
-
-      beamDeps = [ decimal ];
     };
 
     png = buildRebar3 rec {
@@ -175,8 +162,8 @@ let
       unpackPhase = ''
         runHook preUnpack
         unpackFile "$src"
-        chmod -R u+w -- hex-source-png-0.2.1
-        mv hex-source-png-0.2.1 png
+        chmod -R u+w -- hex-source-png-${version}
+        mv hex-source-png-${version} png
         sourceRoot=png
         runHook postUnpack
       '';
