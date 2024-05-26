@@ -3,7 +3,7 @@ Generate a set of nix derivations from a mix.lock file.
 
 ## Overview
 
-Mix2nix is a commandline utility to create a set of nix package definitions
+Mix2nix is a command line utility to create a set of nix package definitions
 based on the contents of a mix.lock file. It makes it a little easier to manage
 Elixir dependencies with nix.
 
@@ -13,7 +13,7 @@ of the Nixpkgs Manual.
 
 ## Usage
 
-### Generate an expession set
+### Generate an expression set
 
 Generate an expression set and save it to a file:
 ```
@@ -91,15 +91,15 @@ to manually specify those.
 
 To create a development environment:
 ```
-$ nix-shell
+$ nix develop
 ```
 
 To build without adding to global environment:
 ```
-$ nix-build
+$ nix build
 ```
 
 To install in your environment:
 ```
-$ nix-env -f ./ -i
+$ nix profile install
 ```
