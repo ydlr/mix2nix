@@ -17,7 +17,11 @@ defmodule Mix2nix do
   end
 
   defp read(filename) do
-    opts = [file: filename, warn_on_unnecessary_quotes: false]
+    opts = [
+      emit_warnings: false,
+      file: filename,
+      warn_on_unnecessary_quotes: false
+    ]
 
     with {:ok, contents} <- File.read(filename),
          {:ok, quoted} <- Code.string_to_quoted(contents, opts),
