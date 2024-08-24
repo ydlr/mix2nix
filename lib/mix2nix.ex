@@ -19,8 +19,7 @@ defmodule Mix2nix do
   defp read(filename) do
     opts = [
       emit_warnings: false,
-      file: filename,
-      warn_on_unnecessary_quotes: false
+      file: filename
     ]
 
     with {:ok, contents} <- File.read(filename),
