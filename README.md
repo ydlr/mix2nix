@@ -103,3 +103,9 @@ To install in your environment:
 ```
 $ nix profile install
 ```
+
+## Changelog
+
+### 0.2.0
+* Update NixOS input to 24.05
+* Remove package-specific workarounds that are no longer necessary. If using an earlier version of NixOS, you may need to stay on version 0.1.9 or mix2nix.
