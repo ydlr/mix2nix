@@ -135,9 +135,8 @@ defmodule Mix2nix do
           };
 
           beamDeps = #{deps};
-    """ <>
-      hexpm_expression_extras(name) <>
-      "    };\n"
+        };
+    """
   end
 
   defp wrap(pkgs) do
@@ -157,21 +156,4 @@ defmodule Mix2nix do
     in self
     """
   end
-
-  @override_src_root ["grpcbox", "png"]
-  defp hexpm_expression_extras(pkg_name) when pkg_name in @override_src_root do
-    """
-
-          unpackPhase = ''
-            runHook preUnpack
-            unpackFile "$src"
-            chmod -R u+w -- #{pkg_name}-${version}
-            mv #{pkg_name}-${version} #{pkg_name}
-            sourceRoot=#{pkg_name}
-            runHook postUnpack
-          '';
-    """
-  end
-
-  defp hexpm_expression_extras(_), do: ""
 end
