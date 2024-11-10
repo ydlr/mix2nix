@@ -29,7 +29,7 @@ $ mix2nix /path/to/mix.lock > deps.nix
 
 You can import your generated package set into your own package definition like
 any other function. An example default.nix could look something like:
-```
+```nix
 { pkgs ? import <nixpkgs> {} }:
 
 with pkgs; with beamPackages;
@@ -50,7 +50,7 @@ buildMix rec {
 ```
 
 If you are packaging your application as a release:
-```
+```nix
 { pkgs ? import <nixpkgs> {} }:
 
 with pkgs; with beamPackages;
@@ -67,7 +67,7 @@ mixRelease {
 ### Overriding package definitions
 
 You can override any package by passing in an `overrides` attribute:
-```
+```nix
 let
   deps = import ./deps.nix { inherit lib beamPackages; overrides = overrideDeps; };
 
