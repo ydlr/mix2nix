@@ -2,7 +2,7 @@
   description = "mix2nix: Generate a set of nix derivations from a mix.lock file";
 
   inputs = {
-    nixpkgs.url = "nixpkgs/nixos-24.05";
+    nixpkgs.url = "nixpkgs/nixos-24.11";
   };
 
   outputs = { self, nixpkgs }:

@@ -1,10 +1,13 @@
 build:
-	nix-build
+	nix build
 
 test:
 	nix-shell --run "mix test"
 
 install:
-	nix-env -f ./ -i
+	nix profile install
 
-.PHONY: build test install
+dev:
+	nix develop
+
+.PHONY: build test install dev
