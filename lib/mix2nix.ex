@@ -1,15 +1,15 @@
 defmodule Mix2nix do
-  def process(filename) do
+  def process(filename, env_vars \\ %{}) do
     filename
     |> read
-    |> expression_set
+    |> expression_set(env_vars)
   end
 
-  def expression_set(deps) do
+  def expression_set(deps, env_vars) do
     deps
     |> Map.to_list()
     |> Enum.sort(:asc)
-    |> Enum.map(fn {k, v} -> nix_expression(deps, k, v) end)
+    |> Enum.map(fn {k, v} -> nix_expression(deps, k, v, env_vars) end)
     |> Enum.reject(fn x -> x == "" end)
     |> Enum.join("\n")
     |> String.trim("\n")
@@ -97,30 +97,58 @@ defmodule Mix2nix do
     end
   end
 
-  def nix_expression(
-        allpkgs,
-        name,
-        {:hex, hex_name, version, _hash, builders, deps, "hexpm", hash2}
-      ),
-      do: get_hexpm_expression(allpkgs, name, hex_name, version, builders, deps, hash2)
-
-  def nix_expression(
-        allpkgs,
-        name,
-        {:hex, hex_name, version, _hash, builders, deps, "hexpm"}
-      ),
-      do: get_hexpm_expression(allpkgs, name, hex_name, version, builders, deps)
-
-  def nix_expression(_allpkgs, _name, _pkg) do
+  defp generate_pre_build(env_vars) when is_nil(env_vars) or env_vars == %{} do
     ""
   end
 
-  defp get_hexpm_expression(allpkgs, name, hex_name, version, builders, deps, sha256 \\ nil) do
+  defp generate_pre_build(env_vars) when is_map(env_vars) do
+  env_exports = env_vars
+    |> Enum.map(fn {key, value} ->
+      quoted_value = if String.contains?(value, [" ", "$", "\"", "'", ";"]) do
+        "\"#{value}\""
+      else
+        value
+      end
+      "        export #{key}=#{quoted_value}"
+    end)
+    |> Enum.join("\n")
+
+  """
+
+        preBuild = ''
+#{env_exports}
+        '';
+  """
+  end
+
+  def nix_expression(
+    allpkgs,
+    name,
+    {:hex, hex_name, version, _hash, builders, deps, "hexpm", hash2},
+    env_vars
+  ),
+    do: get_hexpm_expression(allpkgs, name, hex_name, version, builders, deps, env_vars, hash2)
+
+  def nix_expression(
+    allpkgs,
+    name,
+    {:hex, hex_name, version, _hash, builders, deps, "hexpm"},
+    env_vars
+  ),
+    do: get_hexpm_expression(allpkgs, name, hex_name, version, builders, deps, env_vars)
+
+  def nix_expression(_allpkgs, _name, _pkg, _env_vars) do
+    ""
+  end
+
+  def get_hexpm_expression(allpkgs, name, hex_name, version, builders, deps, env_vars, sha256 \\ nil) do
     name = Atom.to_string(name)
     hex_name = Atom.to_string(hex_name)
     buildEnv = get_build_env(builders, name)
     sha256 = sha256 || get_hash(hex_name, version)
     deps = dep_string(allpkgs, deps)
+
+    pre_build = generate_pre_build(env_vars)
 
     """
         #{name} = #{buildEnv} rec {
@@ -132,7 +160,7 @@ defmodule Mix2nix do
             version = "${version}";
             sha256 = "#{sha256}";
           };
-
+    #{pre_build}
           beamDeps = #{deps};
         };
     """
