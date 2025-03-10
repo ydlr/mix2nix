@@ -109,8 +109,8 @@ defmodule Mix2nix.CLI do
 
     Options:
     -e, --env KEY=VALUE  Set environment variable(s). Can be used multiple times.
-    --help     Show this help message.
-    --version  Show the application version.
+    --help               Show this help message.
+    --version            Show the application version.
     """
   end
 end
