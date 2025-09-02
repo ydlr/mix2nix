@@ -60,7 +60,7 @@ mixRelease {
   src = ./.;
   version = "0.0.0";
 
-  mixNixDeps = import ./deps.nix { inherit lib beamPackage; };
+  mixNixDeps = import ./deps.nix { inherit lib beamPackages; };
 }
 ```
 
