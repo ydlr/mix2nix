@@ -76,7 +76,7 @@ let
       enableDebugInfo = true;
       compilePorts = true;
     };
-  };
+  });
 in
 ...
 ```
